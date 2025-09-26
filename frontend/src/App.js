@@ -7,14 +7,21 @@ import Login from "./components/Login";
 import { useAuth } from "./AuthContext";
 
 export default function App() {
-  const { token, logout } = useAuth();
+  const { token, user, logout } = useAuth();
   return (
     <div style={{ padding: 20 }}>
       <header>
         <nav>
           <Link to="/">Products</Link> | <Link to="/cart">Cart</Link> |{" "}
           {token ? (
-            <button onClick={logout}>Logout</button>
+            <>
+              {user && (
+                <span style={{ marginRight: 10 }}>
+                  Signed in as <strong>{user.name || user.email}</strong>
+                </span>
+              )}
+              <button onClick={logout}>Logout</button>
+            </>
           ) : (
             <Link to="/login">Login</Link>
           )}

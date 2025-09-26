@@ -19,16 +19,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
-          cache-dependency-path: backend/package-lock.json
 
       - name: Install backend dependencies
         working-directory: ./backend
-        run: npm ci
+        run: npm install
 
-      - name: Check backend syntax
+      - name: Run backend tests
         working-directory: ./backend
-        run: node -c server.js
+        run: npm test
 
   frontend-check:
     runs-on: ubuntu-latest
@@ -42,16 +40,17 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
-          cache-dependency-path: frontend/package-lock.json
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Build frontend
         working-directory: ./frontend
         run: npm run build
+      - name: Run frontend tests
+        working-directory: ./frontend
+        run: npm test
 
   integration-test:
     runs-on: ubuntu-latest
@@ -66,18 +65,14 @@ jobs:
         uses: actions/setup-node@v4
         with:
           node-version: "18"
-          cache: "npm"
-          cache-dependency-path: |
-            backend/package-lock.json
-            frontend/package-lock.json
 
       - name: Install backend dependencies
         working-directory: ./backend
-        run: npm ci
+        run: npm install
 
       - name: Install frontend dependencies
         working-directory: ./frontend
-        run: npm ci
+        run: npm install
 
       - name: Build frontend
         working-directory: ./frontend
@@ -101,9 +96,20 @@ jobs:
           curl -f http://localhost:4000/products || exit 1
 
           # Test login endpoint
-          curl -f -X POST http://localhost:4000/login \
+          LOGIN_RESPONSE=$(curl -s -X POST http://localhost:4000/login \
             -H "Content-Type: application/json" \
-            -d '{"email":"user@example.com","password":"password123"}' || exit 1
+            -d '{"email":"user@example.com","password":"password123"}') || exit 1
+          echo "$LOGIN_RESPONSE" | grep -q 'token' || { echo "Login did not return token"; exit 1; }
+          TOKEN=$(echo "$LOGIN_RESPONSE" | jq -r '.token')
+          if [ -z "$TOKEN" ] || [ "$TOKEN" = "null" ]; then echo "Failed to parse token"; exit 1; fi
+
+          # Test GraphQL userProfile with token
+          GRAPHQL_QUERY='{"query":"query { userProfile { id email name } }"}'
+          curl -f -X POST http://localhost:4000/graphql \
+            -H "Content-Type: application/json" \
+            -H "Authorization: Bearer $TOKEN" \
+            -d "$GRAPHQL_QUERY" | jq -e '.data.userProfile.email == "user@example.com"' > /dev/null || {
+              echo "GraphQL userProfile failed"; exit 1; }
 
   docker-build:
     runs-on: ubuntu-latest

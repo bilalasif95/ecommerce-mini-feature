@@ -40,6 +40,16 @@ npm start
 
 The application will open in your browser at `http://localhost:3000`.
 
+### Environment variables
+
+Create a `.env` file in this directory to override defaults:
+
+```
+REACT_APP_API_BASE=http://localhost:4000
+```
+
+An example file is provided as `_env.example`.
+
 ## Available Scripts
 
 - `npm start` - Runs the app in development mode
@@ -136,7 +146,7 @@ The application uses inline styles for simplicity. For production, consider:
 
 - Cart state persists across browser sessions
 - Authentication state is maintained in memory
-- API calls are made to `http://localhost:4000` by default
+- API calls use `REACT_APP_API_BASE` (default `http://localhost:4000`)
 - Error handling for network requests
 - Loading states for better UX
 

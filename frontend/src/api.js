@@ -1,4 +1,4 @@
-const API_BASE = process.env.REACT_APP_API_BASE || "";
+const API_BASE = process.env.REACT_APP_API_BASE || "http://localhost:4000";
 
 // Enhanced API utility with better error handling
 class ApiError extends Error {
