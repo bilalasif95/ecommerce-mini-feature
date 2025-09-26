@@ -128,6 +128,7 @@ jobs:
         with:
           context: .
           push: false
+          load: true
           tags: ecommerce-app:test
 
       - name: Test Docker image
